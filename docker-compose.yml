@@ -9,6 +9,27 @@ services:
     container_name: web
     ports:
       - "8087:6000"
+  log1:
+    build:
+      context: .
+      dockerfile: Dockerfile1
+    container_name: log1
+    ports:
+      - "35001:6000"
+  log2:
+    build:
+      context: .
+      dockerfile: Dockerfile1
+    container_name: log2
+    ports:
+      - "35002:6000"
+  log3:
+    build:
+      context: .
+      dockerfile: Dockerfile1
+    container_name: log3
+    ports:
+      - "35003:6000"
   db:
     image: mongo:3.6.1
     container_name: db

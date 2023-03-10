@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
     <title>AREP-TALLER05</title>
 </head>
 <body>
 <h1>Type a word!</h1>
 <form action="/roundrobin">
-    <input type="text" id="word" name="word" value="Here"><br><br>
-    <input type="button" value="Submit">
+    <input type="text" id="word" name="word" value="Here"><br>
+    <input type="button" value="Submit" onclick="post()"><br>
+    <input type="button" value="Logs" onclick="get()">
 </form>
 <br>
+<div id="logs"></div>
 </body>
 </html>
