@@ -15,14 +15,15 @@ import static spark.Spark.*;
 
 public class App {
 
-    private static String urlDB = "192.168.12.21:27017";
+    private static String urlDB = "34.236.242.6:27017";
+    private static String urlc = "mongodb://54.163.23.254:27017//?retryWrites=true&w=majority";
     private static MongoClient client = null;
     private static MongoDatabase database = null;
     private static MongoCollection<Document> collection;
 
     public static void main(String[] args) {
         port(getPort());
-        get("logs", (req,res) -> {
+        get("/logs", (req,res) -> {
             dbConnection();
             List<String> data = new ArrayList<>();
             for (Document document: collection.find()) {
@@ -32,7 +33,7 @@ public class App {
             return data.subList(Math.max(data.size() - 10, 0), data.size());
         });
 
-        post("logs", (req,res) -> {
+        post("/logs", (req,res) -> {
             dbConnection();
             if (req.body() != null) {
                 Document doc = new Document();
@@ -54,7 +55,7 @@ public class App {
     public static void dbConnection() {
         client = new MongoClient(urlDB);
         database = client.getDatabase("admin");
-        collection = database.getCollection("AREP-TALLER05");
+        collection = database.getCollection("logs");
     }
 
     private static int getPort() {
