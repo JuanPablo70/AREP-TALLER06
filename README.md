@@ -1,7 +1,7 @@
 ## Escuela Colombiana de Ingeniería
-# MODULARIZACIÓN CON VIRTUALIZACIÓN (DOCKER y AWS)
+# PATRONES ARQUITECTURALES
 
-Construir una aplicación con la arquitectura propuesta y desplegarla en AWS usando EC2 y Docker.
+Construir una aplicación con la arquitectura propuesta y desplegarla en AWS usando EC2.
 
 1. El servicio MongoDB es una instancia de MongoDB corriendo en un container de docker en una máquina virtual de EC2.
 
@@ -14,7 +14,7 @@ Construir una aplicación con la arquitectura propuesta y desplegarla en AWS usa
 Para descargar este proyecto, debe ejecutar el siguiente comando para descargar el proyecto:
 
 ```
-https://github.com/JuanPablo70/AREP-TALLER05.git
+https://github.com/JuanPablo70/AREP-TALLER06.git
 ```
 
 ### Prerrequisitos
@@ -22,52 +22,102 @@ https://github.com/JuanPablo70/AREP-TALLER05.git
 Para hacer uso de esta aplicación debe tener conocimientos de:
 + Java - Lenguaje de programación orientado a objetos.
 + Maven - Herramienta para automatizar la gestión y construcción de proyectos Java. 
-+ Docker - Proyecto de código abierto que automatiza el despliegue de aplicaciones dentro de contenedores de software, proporcionando una capa adicional de abstracción y automatización de virtualización de aplicaciones en múltiples sistemas operativos.
++ AWS - Plataforma de computación en la nube.
 
-### Ejecución de la aplicación
+## Descripción del proyecto
 
-Para ejecutar la aplicación de forma local, se debe primero tener instalado Docker Desktop y ejecutar los siguientes comandos, que son los que crearán las imágenes.
+El proyecto estaba diseñado en la arquitectura que se muestra a continuación:
 
-```
-docker-compose build
+![](img/diseño.png)
 
-docker-compose up -d
-```
+Para este taller se requería aplicar un patrón de arquitectura de la siguiente forma:
 
-Seguido a esto, en la línea de comandos (cmd) ubicarse en la carpeta donde se clonó el proyecto y ejecutar el siguiente comando:
+![](img/diseñoTaller.png)
 
-```
-mvn clean package exec:java -D "exec.mainClass"="edu.eci.arep.app.App"
+En donde el aplicativo web, junto con los logs services y la base de datos en Mongo deben ir cada uno en una instancia aparte.
 
-mvn clean package exec:java -D "exec.mainClass"="edu.eci.arep.app.RoundRobin"
-```
+Para esto, se crearon cinco instancias en AWS:
 
-También se puede ejecutar con el siguiente comando sin necesidad de utilizar maven:
+![](img/awsinstancias.png)
 
-```
-java -cp target/classes edu.eci.arep.app.App
+#### MongoDB
 
-java -cp target/classes edu.eci.arep.app.RoundRobin
-```
-
-Una vez se hayan ejecutado los comandos, ingresar al siguiente enlace http://localhost:4567. 
-
-El proyecto se logró desplegar en una instancia de AWS y para acceder a ella, se debe ingresar el siguiente enlace si la instancia está iniciada.
+Se instaló [MongoDB](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-amazon/) en esta instancia y se configuró su archivo de configuración para que pueda ser accedida por cualquier recurso.
 
 ```
-ec2-54-172-82-211.compute-1.amazonaws.com:8087
+sudo nano /etc/mongod.conf
 ```
+
+![](img/mongoconf.png)
+
+```
+sudo systemctl status mongod
+```
+
+![](img/mongo.png)
+
+Por último, se agrega una regla de entrada que permita abrir el puerto 27017.
+
+#### LogService
+
+Para las instancias de LogService (1, 2, 3) se transfirió el directorio target.zip del proyecto a cada instancia, en donde se tuvo que cambiar el puerto en el método ```getPort()``` a 35001, 35002, 35003 respectivamente y cambiar el atributo ```urlDB``` por el DNS de IPv4 pública de la instancia de MongoDB.
+
+![](img/sftp.png)
+
+```
+unzip target.zip
+```
+
+Se agregó una regla de entrada al puerto de cada LogService 1, 2, 3 con puertos 35001, 35002, 32003 respectivamente.
+
+#### AppELB
+
+Se cambió el código de la clase ```RoundRobin``` quemando los DNS de IPv4 pública de las instancias de LogService con su respectivo puerto en el atributo ```logs``` y se garantiza el Round Robin, ya que hace la conexión a un LogService aleatorio.
+
+Luego se compila el proyecto y se comprime el target en un archivo .zip y se sube a la instancia AppELB repitiendo los mismos pasos que se hicieron en las instancias de LogService para descomprimir el directorio target.
+
+Se agregó una regla de entrada al puerto 4567 a la instancia.
 
 ## Test
 
-![](img/awsinstancia.png)
+Se hicieron pruebas ejecutando el siguiente comando en cada una de las instancias de LogService:
 
-![](img/awsweb.png)
+```
+java -cp "target/classes:target/dependency/*" edu.eci.arep.app.App
+```
+
+Y el siguiente comando en la instancia AppELB:
+
+```
+java -cp "target/classes:target/dependency/*" edu.eci.arep.app.RoundRobin
+```
+
+En los LogService se debe ver algo así con el DNS de IPv4 pública de cada instancia con su respectivo puerto:
+
+LogService1
+
+![](img/ls1.png)
+
+LogService2
+
+![](img/ls2.png)
+
+LogService3
+
+![](img/ls3.png)
+
+Y en AppELB se debe ver de la siguiente forma:
+
+![](img/prueba.png)
+
+Se debe poder ingresar una palabra y llamar los logs haciendo clic en el botón Logs.
+
+![](img/pruebaws.png)
 
 ## Construido con
 
 + [Maven](https://maven.apache.org/) - Dependency Management
-+ [Docker](https://www.docker.com/) - Container Develop
++ [AWS](https://aws.amazon.com/es/) - Cloud Platform
 
 ## Versión
 
@@ -76,29 +126,3 @@ ec2-54-172-82-211.compute-1.amazonaws.com:8087
 ## Autor
 
 Juan Pablo Sánchez Bermúdez
-
-## Descripción del proyecto
-
-![](img/diseño.png)
-
-Para este diseño, se implementó de la siguiente forma el cliente-servidor en Java.
-
-![](img/java.png)
-
-### RoundRobin
-
-Esta clase tiene los métodos get y post para consultar los datos y se conecta con una instancia de forma aleatoria. Si se desea conectar a con la instancia en AWS, en el atributo url se debe poner la ip privada correspondiente.
-
-### App
-
-Esta clase es la encargada de hacer la conexión a la base de datos en mongo de una imagen de docker lo que permite consultar los datos ingresados por el usuario.
-
-### Dockerfile
-
-Se crearon dos dockerfiles para crear una imagen de App y una de RoundRobin.
-
-### Docker-compose.yml
-
-Se especificó que en este archivo los servicios que se deberían crear, por lo que se crea un servicio web, tres de logs y el de la base de datos.
-
-![](img/prueba.png)
