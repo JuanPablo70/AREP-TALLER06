@@ -15,7 +15,7 @@ import static spark.Spark.*;
 
 public class App {
 
-    private static String urlDB = "34.236.242.6:27017";
+    private static String urlDB = "ec2-35-153-126-121.compute-1.amazonaws.com:27017";
     private static String urlc = "mongodb://54.163.23.254:27017//?retryWrites=true&w=majority";
     private static MongoClient client = null;
     private static MongoDatabase database = null;
@@ -62,6 +62,6 @@ public class App {
         if (System.getenv("PORT") != null) {
             return Integer.parseInt(System.getenv("PORT"));
         }
-        return 35001;
+        return 35003;
     }
 }

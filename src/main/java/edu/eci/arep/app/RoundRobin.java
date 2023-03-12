@@ -8,11 +8,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Random;
 
 import static spark.Spark.*;
 
 public class RoundRobin {
-    private static String url = "http://192.168.12.21:3500";
+    private static String url = "http://";
+
+    private static String[] logs = {"ec2-100-25-134-71.compute-1.amazonaws.com:35001", "ec2-107-22-142-11.compute-1.amazonaws.com:35002", "ec2-54-87-234-223.compute-1.amazonaws.com:35003"};
 
     public static void main(String... args){
         port(getPort());
@@ -20,7 +23,7 @@ public class RoundRobin {
         staticFiles.location("/public");
 
         get("/logs", (req,res) -> {
-            URL urlrr = new URL(url + getNumberPort() + "/logs");
+            URL urlrr = new URL(url + logs[getIp()] + "/logs");
             HttpURLConnection con = (HttpURLConnection) urlrr.openConnection();
             con.setRequestMethod("GET");
             con.connect();
@@ -40,7 +43,7 @@ public class RoundRobin {
         });
 
         post("/logs", (request, response) -> {
-            URL urlrr = new URL(url + getNumberPort() + "/logs");
+            URL urlrr = new URL(url + logs[getIp()] + "/logs");
             HttpURLConnection con = (HttpURLConnection) urlrr.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Content-Type", "text/plain");
@@ -72,8 +75,9 @@ public class RoundRobin {
         return 4567;
     }
 
-    public static int getNumberPort() {
-        return (int)(Math.random()*3+1);
+    public static int getIp() {
+        Random r = new Random();
+        return r.nextInt(3);
     }
 
 
