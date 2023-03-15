@@ -80,7 +80,7 @@ Se agregó una regla de entrada al puerto de cada LogService 1, 2, 3 con puertos
 
 #### AppELB
 
-Se instaló Java 8 como se realizó con ls intancias de LogService y se cambió el código de la clase ```RoundRobin``` quemando los DNS de IPv4 pública de las instancias de LogService con su respectivo puerto en el atributo ```logs``` y se garantiza el Round Robin, ya que hace la conexión a un LogService aleatorio.
+Se instaló Java 8 como se realizó con las intancias de LogService y se cambió el código de la clase ```RoundRobin``` quemando los DNS de IPv4 pública de las instancias de LogService con su respectivo puerto en el atributo ```logs``` y se garantiza el Round Robin, ya que hace la conexión a un LogService aleatorio.
 
 Luego se compila el proyecto y se comprime el target en un archivo .zip y se sube a la instancia AppELB repitiendo los mismos pasos que se hicieron en las instancias de LogService para descomprimir el directorio target.
 
